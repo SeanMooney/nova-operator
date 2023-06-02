@@ -20,48 +20,8 @@
         mode: "0755"
 
     - name: Collect general openshift cr info
-      ansible.builtin.shell: |
-        source ~/.bashrc
-        cp /etc/resolv.conf .
-        cp /etc/hosts .
-        ip a > network.txt
-        ip ro ls >> network.txt
-        oc get pods > all_pods.txt
-        oc get secrets > all_secrets.txt
-        oc get pv > all_pv.txt
-        oc get events > oc_events.txt
-        oc get routes > oc_routes.txt
-        oc get all > oc_all.txt
-        oc get -o yaml openstackdataplane > openstackdataplane.yaml
-        oc get -o yaml openstackdataplanerole > openstackdataplanerole.yaml
-        oc get -o yaml openstackdataplanenode > openstackdataplanenode.yaml
-        pod_dir="{{ ansible_user_dir }}/zuul-output/logs/controller/pods"
-        mkdir ${pod_dir}
-        pushd ${pod_dir}
-          all_pods=$(oc get pods | awk '{print $1}' | awk -F '.' '{print $1}')
-          for pod in $all_pods; do
-            echo $pod
-            oc logs pod/${pod} > ${pod}-logs.txt
-            oc get -o yaml pod/${pod} > ${pod}.yaml
-            oc describe pod/${pod} > ${pod}-describe.txt
-          done
-        popd
-        crd_logs="{{ ansible_user_dir }}/zuul-output/logs/controller/crd"
-        mkdir ${crd_logs}
-        pushd ${crd_logs}
-          all_crds=$(oc get crd | grep openstack | awk '{print $1}' | awk -F '.' '{print $1}')
-          for cr in $all_crds; do
-            echo $crd
-            oc get -o yaml $cr > ${cr}.yaml
-            oc describe $cr > ${cr}-describe.txt
-          done
-        popd
-      args:
-        chdir: "{{ ansible_user_dir }}/zuul-output/logs/controller"
-      changed_when: true
-      ignore_errors: true
-      tags:
-        - skip_ansible_lint
+      ansible.builtin.include_role:
+        name: artifacts
 
 - hosts: all
   name: Copy files from controller on node
