@@ -1,0 +1,28 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: openstack
+resources:
+- catalogsource.yaml
+- operatorgroup.yaml
+- subscription.yaml
+
+configMapGenerator:
+- name: environment-variables
+  envs: [environment-properties.env]
+  behavior: create
+
+replacements:
+- source:
+    fieldPath: data.OPENSTACK_OPERATOR_INDEX_URL
+    kind: ConfigMap
+    name: environment-variables
+    version: v1
+  targets:
+  - fieldPaths:
+    - spec.image
+    select:
+      group: operators.coreos.com
+      kind: CatalogSource
+      name: openstack-operator-index
+      namespace: openstack
+      version: v1alpha1
